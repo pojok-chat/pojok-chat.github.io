@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Online Sederhana</title>
+    <link rel="stylesheet" href="style.css"> <!-- Path sudah benar (root) -->
+</head>
+<body>
+    <div class="container">
+        <h1>Chat Online 🗨️</h1>
+        
+        <!-- Bagian Login: Input Nama & Kode Room -->
+        <div id="login-section">
+            <input 
+                type="text" 
+                id="username" 
+                placeholder="Masukkan nama Anda..." 
+                required 
+                maxlength="20"
+            >
+            <input 
+                type="text" 
+                id="roomcode" 
+                placeholder="Kode Room (4 angka)..." 
+                required 
+                maxlength="4"
+                pattern="[0-9]{4}"
+                title="Kode room harus 4 angka"
+            >
+            <button id="join-button">Masuk Room</button>
+        </div>
+
+        <!-- Bagian Chat: Tampil Pesan & Input Pesan -->
+        <div id="chat-section" style="display: none;">
+            <div class="room-info">
+                <span>Room: <strong id="current-room"></strong></span>
+                <span>Nama: <strong id="current-user"></strong></span>
+            </div>
+            <div id="chat-messages"></div>
+            <div class="input-wrapper">
+                <input 
+                    type="text" 
+                    id="message-input" 
+                    placeholder="Ketik pesan Anda..." 
+                    required
+                >
+                <button id="send-button">Kirim</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="chat.js"></script> <!-- Path sudah benar (root) -->
+</body>
+</html>
