@@ -10,8 +10,8 @@ const chatMessages = document.getElementById('chat-messages');
 const messageInput = document.getElementById('message-input');
 const sendButton = document.getElementById('send-button');
 
-// GANTI DENGAN URL BACKEND HEROKU ANDA!
-const BACKEND_URL = 'https://nama-aplikasi-anda.herokuapp.com'; 
+// --- GANTI DENGAN URL BACKEND HEROKU ANDA NANTI! ---
+const BACKEND_URL = 'https://nama-aplikasi-heroku-anda.herokuapp.com';
 let activeUsername = '';
 let activeRoomcode = '';
 
@@ -20,106 +20,86 @@ function showMessage(user, text, isMine = false) {
     const messageDiv = document.createElement('div');
     messageDiv.classList.add('message');
     messageDiv.classList.add(isMine ? 'my-message' : 'other-message');
-    
-    messageDiv.innerHTML = `
-        <div class="user">${user}</div>
-        <div class="text">${text}</div>
-    `;
-    
+    messageDiv.innerHTML = `<div class="user">${user}</div><div class="text">${text}</div>`;
     chatMessages.appendChild(messageDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight; // Gulir ke pesan terbaru
+    chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-// Fungsi: Muat pesan lama dari backend
+// Fungsi: Muat pesan lama dari database
 function loadOldMessages() {
     fetch(`${BACKEND_URL}/get-messages?roomcode=${activeRoomcode}`)
-        .then(response => response.json())
+        .then(res => res.json())
         .then(data => {
             if (data.success) {
-                chatMessages.innerHTML = ''; // Kosongkan pesan lama
+                chatMessages.innerHTML = '';
                 data.messages.forEach(msg => {
                     const isMine = msg.username === activeUsername;
                     showMessage(msg.username, msg.message, isMine);
                 });
-            } else {
-                alert('Gagal memuat pesan lama: ' + data.message);
             }
         })
-        .catch(error => console.error('Error:', error));
+        .catch(err => console.error('Error muat pesan:', err));
 }
 
-// Fungsi: Perbarui pesan setiap 2 detik
-function startRefreshingMessages() {
+// Fungsi: Refresh pesan setiap 2 detik
+function startRefreshing() {
     setInterval(loadOldMessages, 2000);
 }
 
-// Event: Tombol "Masuk Room" diklik
+// Event: Masuk Room
 joinButton.addEventListener('click', () => {
     activeUsername = usernameInput.value.trim();
     activeRoomcode = roomcodeInput.value.trim();
 
     if (!activeUsername || !activeRoomcode) {
-        alert('Isi nama dan kode room terlebih dahulu!');
+        alert('Isi nama dan kode room!');
         return;
     }
 
-    // Kirim permintaan ke backend untuk masuk room
+    // Kirim permintaan ke backend
     fetch(`${BACKEND_URL}/join-room`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: activeUsername, roomcode: activeRoomcode })
     })
-    .then(response => response.json())
+    .then(res => res.json())
     .then(data => {
         if (data.success) {
-            // Tampilkan bagian chat, sembunyikan login
             loginSection.style.display = 'none';
             chatSection.style.display = 'block';
             currentRoom.textContent = activeRoomcode;
             currentUser.textContent = activeUsername;
-            
-            // Muat pesan lama dan mulai refresh
             loadOldMessages();
-            startRefreshingMessages();
+            startRefreshing();
         } else {
             alert(data.message);
         }
     })
-    .catch(error => console.error('Error:', error));
+    .catch(err => console.error('Error masuk room:', err));
 });
 
-// Event: Tombol "Kirim" diklik
+// Event: Kirim Pesan
 sendButton.addEventListener('click', () => {
-    const messageText = messageInput.value.trim();
-    if (!messageText) return;
+    const text = messageInput.value.trim();
+    if (!text) return;
 
-    // Kirim pesan ke backend
     fetch(`${BACKEND_URL}/send-message`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             username: activeUsername,
             roomcode: activeRoomcode,
-            message: messageText
+            message: text
         })
     })
-    .then(response => response.json())
+    .then(res => res.json())
     .then(data => {
-        if (data.success) {
-            messageInput.value = ''; // Kosongkan input
-        } else {
-            alert('Gagal mengirim pesan: ' + data.message);
-        }
+        if (data.success) messageInput.value = '';
+        else alert('Gagal kirim pesan!');
     })
-    .catch(error => console.error('Error:', error));
+    .catch(err => console.error('Error kirim pesan:', err));
 });
 
-// Event: Tekan "Enter" untuk mengirim pesan
-messageInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') sendButton.click();
-});
-
-// Event: Tekan "Enter" untuk masuk room
-roomcodeInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') joinButton.click();
-});
+// Event: Tekan Enter untuk masuk/kirim
+roomcodeInput.addEventListener('keypress', e => e.key === 'Enter' && joinButton.click());
+messageInput.addEventListener('keypress', e => e.key === 'Enter' && sendButton.click());
